@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>中国八大林业工程分布</title>
+  
+  <!-- 引入ArcGIS API样式和脚本 -->
+  <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css">
+  <script src="https://js.arcgis.com/4.32/"></script>
+
+  <style>
+    html, body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: 'Microsoft YaHei', sans-serif;
+    }
+
+    /* 三区域布局 */
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    header {
+      background: #8FBC8F;
+      color: rgb(255, 255, 255);
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #mapView {
+      flex: 1;
+      border: 1px solid #e0e0e0;
+      position: relative;
+    }
+
+     /* 新增样式用于调整底图库组件位置 */
+     arcgis-basemap-gallery {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1000;
+    }
+
+    #basemapGallery {
+      position: relative; /* 为绝对定位的子元素提供定位上下文 */
+      padding: 10px;
+      background: #f8f9fa;
+      border-top: 1px solid #e0e0e0;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .basemap-item {
+      display: inline-block;
+      margin: 5px;
+      padding: 8px 15px;
+      border: 1px solid #ddd;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+
+    .active-basemap {
+      border-color: #4a90e2;
+      background-color: #e6f2ff;
+      transform: scale(1.05);
+    }
+
+    .esri-basemap-gallery__container {
+      top: 10px !important;
+      right: 10px !important;
+      z-index: 1000;
+    }
+
+    .esri-widget {
+      font-family: 'Microsoft YaHei', sans-serif !important;
+    }
+    
+    #customText {
+      position: absolute;     /* 绝对定位 */
+      left: 15px;            /* 距离右侧 20px */
+      bottom: 90px;             /* 距离顶部 100px */
+      z-index: 1000;          /* 确保控件在最上层 */
+      background: rgb(143,188,143);
+      padding: 10px;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgb(255, 255, 255);
+      color: rgb(255, 255, 255);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <!--页眉 -->
+    <header>
+      <div>
+        <span style="font-size: 1.5em; font-weight: bold;">中国八大林业工程分布</span>
+      </div>
+      <div>
+        <p>来源:中科院地理科学与资源研究所资源环境科学数据平台</p>
+      </div>
+    </header>
+    
+    <!-- 地图区域 -->
+    <div id="mapView"></div>
+    
+    <!-- 底图库区域 -->
+    <!-- <div id="basemapGallery">
+      <h3 style="margin: 0 0 10px 10px;">底图选择：</h3>
+      <div class="basemap-item" data-basemap="streets-vector">矢量街道图</div>
+      <div class="basemap-item" data-basemap="satellite">卫星影像</div>
+      <div class="basemap-item" data-basemap="topo">地形图</div>
+      
+    </div> -->
+  </div>
+  <!-- customText说明框 -->
+  <div id="customText" class="esri-widget esri-widget--panel">
+    <h3>地图说明：</h3>
+    <p>林业工程是中国生态建设的重要组成部分，涵盖了防护林体系的建设，</p>
+    <p>旨在改善和保护自然环境，提升生态环境质量，促进可持续发展。</p>
+  </div>
+ 
+  <script>
+    require([
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/layers/FeatureLayer",
+      "esri/widgets/ScaleBar",
+      "esri/widgets/Legend",
+      "esri/widgets/Search",
+      "esri/widgets/LayerList",
+      "esri/widgets/Compass",
+      "esri/widgets/NavigationToggle",
+      "esri/widgets/Home",
+      "esri/widgets/BasemapGallery",
+      "esri/Basemap"
+    ], function(Map, MapView, FeatureLayer, ScaleBar, Legend, Search, LayerList, Compass, NavigationToggle, Home, BasemapGallery, Basemap) {
+
+      // 初始地图
+      const map = new Map({
+        basemap: "topo-vector"
+      });
+
+      // 初始化地图视图
+      const view = new MapView({
+        container: "mapView",
+        map: map,
+        center: [108.195, 35.8617],
+        zoom: 4,
+        ui: {
+          components: ["attribution"] // 保留版权信息
+        }
+      });
+
+      // 添加控件
+      const scaleBar = new ScaleBar({ //比例尺
+        view: view,
+        unit: "metric",
+        style: "ruler"
+      });
+      view.ui.add(scaleBar, "bottom-left");
+
+      const search = new Search({ //搜索框
+        view: view,
+        popupEnabled: false
+      });
+      view.ui.add(search, "top-right");
+
+      const compass = new Compass({ //指南针
+        view: view
+      });
+      view.ui.add(compass, "top-right");
+
+      const navigationToggle = new NavigationToggle({ //导航切换
+        view: view
+      });
+      view.ui.add(navigationToggle, "top-right");
+
+      const homeBtn = new Home({ //初始界面
+        view: view
+      });
+      view.ui.add(homeBtn, "top-right");
+
+      const layerList = new LayerList({ //图层列表
+        view: view
+      });
+      view.ui.add(layerList, "top-left");
+
+      const legend = new Legend({ //图例
+        view: view,
+        style: "card"
+      });
+      view.ui.add(legend, "top-left");
+
+      //添加专题图层
+      const featureLayer = new FeatureLayer({
+        url: "https://www.geosceneonline.cn/server/rest/services/Hosted/中国八大林业工程分布/FeatureServer",
+        opacity: 0.8
+      });
+      map.add(featureLayer);
+
+      // 底图切换功能
+      const basemapGallery = new BasemapGallery({
+        view: view,
+        container: document.createElement("div"),
+        source: {
+          portal: {
+            url: "https://www.arcgis.com",
+            useVectorBasemaps: true
+          }
+        }
+      });
+      
+      // 将底图库添加到视图UI
+      view.ui.add(basemapGallery, {
+        position: "bottom-right",
+        index: 0
+      });
+    });
+
+    // 将自定义组件添加到地图界面
+    view.ui.add("customText", "manual");
+    
+  </script>
+</body>
+</html>
