@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArcGIS Map Application</title>
+    <style>
+        html, body {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            background-color: #e9e5e1; /* 页面背景色：柔和的米色 */
+        }
+ 
+        header {
+            background-color: #d1c4b3; /* 页眉背景色：柔和的灰褐色 */
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333; /* 字体颜色：深灰色 */
+        }
+ 
+        main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+ 
+        #mapContainer {
+            flex: 3;
+            position: relative;
+            background-color: #f0f0f0; /* 地图容器背景色：浅灰色 */
+        }
+ 
+        #basemapGalleryContainer {
+            flex: 1;
+            background-color: #e6d6c7; /* 底图库容器背景色：柔和的米黄色 */
+            padding: 10px;
+            overflow-y: auto;
+            color: #333; /* 字体颜色：深灰色 */
+        }
+ 
+        arcgis-map {
+            height: 100%;
+            width: 100%;
+        }
+ 
+        h2 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css" />
+    <script src="https://js.arcgis.com/4.32/"></script>
+</head>
+<body>
+    <header>
+        <h3>福州地铁查询地图应用</h3>
+    </header>
+    <main>
+        <div id="mapContainer">
+            <!-- 使用原生 ArcGIS API 的方式初始化地图 -->
+            <div id="viewDiv" style="height: 100%; width: 100%;"></div>
+        </div>
+        <div id="basemapGalleryContainer" style="text-align: center; padding: 20px;">
+            <h2>底图库</h2>
+            <div id="basemapGalleryDiv" style="height: 80%; width: 100%;"></div>
+        </div>
+    </main>
+    <script>
+        require([
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/widgets/BasemapGallery",
+            "esri/widgets/Zoom",
+            "esri/widgets/Legend",
+            "esri/widgets/LayerList",
+            "esri/widgets/Search",
+            "esri/widgets/ScaleBar",
+            "esri/layers/FeatureLayer"
+        ], function(Map, MapView, BasemapGallery, Zoom, Legend, LayerList, Search, ScaleBar, FeatureLayer) {
+            // 创建地图和视图
+            const map = new Map({
+                basemap: "topo-vector"
+            });
+ 
+            const view = new MapView({
+                container: "viewDiv",
+                map: map,
+                center: [119.2918, 26.037],
+                zoom: 12
+            });
+ 
+            // 添加地铁站点和线路图层
+            const stationsLayer = new FeatureLayer({
+                url: "https://www.geosceneonline.cn/server/rest/services/Hosted/福州地铁/FeatureServer/0",
+                title: "地铁站点"
+            });
+            map.add(stationsLayer);
+ 
+            const linesLayer = new FeatureLayer({
+                url: "https://www.geosceneonline.cn/server/rest/services/Hosted/福州地铁/FeatureServer/1",
+                title: "地铁线路"
+            });
+            map.add(linesLayer, 0);
+ 
+            // 创建并添加其他小部件
+            const zoomWidget = new Zoom({
+                view: view
+            });
+            view.ui.add(zoomWidget, "top-left");
+ 
+            const legendWidget = new Legend({
+                view: view
+            });
+            view.ui.add(legendWidget, "top-left");
+ 
+            const layerListWidget = new LayerList({
+                view: view
+            });
+            view.ui.add(layerListWidget, "top-left");
+ 
+            const searchWidget = new Search({
+                view: view
+            });
+            view.ui.add(searchWidget, "top-right");
+ 
+            const scaleBarWidget = new ScaleBar({
+                view: view,
+                unit: "dual"
+            });
+            view.ui.add(scaleBarWidget, "bottom-right");
+ 
+            // 创建并添加 BasemapGallery 小部件
+            const basemapGallery = new BasemapGallery({
+                view: view,
+                container:"basemapGalleryDiv" // 创建一个临时容器来初始化
+            });
+
+        
+        });
+    </script>
+</body>
+</html>
